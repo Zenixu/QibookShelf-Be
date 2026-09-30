@@ -255,7 +255,8 @@ class BookshelfEndToEndTest {
                 "title", "Buku Duplikat",
                 "isbn", "9786020324123",
                 "publishYear", 2020,
-                "publisherId", publisherId
+                "publisherId", publisherId,
+                "authorIds", java.util.List.of(authorId)
         ));
         assertStatus(result, 409);
         assertThat(json(result).get("detail").asText())
@@ -270,7 +271,8 @@ class BookshelfEndToEndTest {
                 "title", "Buku Lengkap",
                 "isbn", "9780000000011",
                 "publishYear", 2021,
-                "publisherId", 99999
+                "publisherId", 99999,
+                "authorIds", java.util.List.of(authorId)
         ));
         assertStatus(result, 404);
     }
@@ -282,7 +284,8 @@ class BookshelfEndToEndTest {
         MvcResult result = post("/api/books", Map.of(
                 "isbn", "9780000000012",
                 "publishYear", 2021,
-                "publisherId", publisherId
+                "publisherId", publisherId,
+                "authorIds", java.util.List.of(authorId)
         ));
         assertStatus(result, 400);
         JsonNode errors = json(result).get("errors");

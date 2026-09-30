@@ -25,42 +25,64 @@ public class ReadingLogService {
 
     /**
      * GET /api/books/{bookId}/reading-logs — riwayat baca satu buku (paling baru duluan).
+     * MULTI-TENANCY: Hanya menampilkan log milik user yang sedang login.
      */
     public java.util.List<ReadingLogResponse> listByBook(Long bookId) {
-        if (!bookRepository.existsById(bookId)) {
-            throw new NotFoundException("Buku id %d tidak ditemukan".formatted(bookId));
-        }
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
+        Book book = bookRepository.findById(bookId)
+                .filter(b -> b.getUser() != null && b.getUser().getId().equals(currentUserId))
+                .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(bookId)));
+        
         return readingLogRepository.findByBookIdOrderByStartedAtDesc(bookId).stream()
+                .filter(log -> log.getUser() != null && log.getUser().getId().equals(currentUserId))
                 .map(ReadingLogResponse::of)
                 .toList();
     }
 
     /**
      * GET /api/reading-logs?status= — semua log dengan filter status opsional.
+     * MULTI-TENANCY: Hanya menampilkan log milik user yang sedang login.
      */
     public Page<ReadingLogResponse> listByStatus(ReadingStatus status, Pageable pageable) {
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
         Page<ReadingLog> page = (status == null)
                 ? readingLogRepository.findAll(pageable)
                 : readingLogRepository.findAllByStatus(status, pageable);
-        return page.map(ReadingLogResponse::of);
+        
+        return page
+                .filter(log -> log.getUser() != null && log.getUser().getId().equals(currentUserId))
+                .map(ReadingLogResponse::of);
     }
 
     @Transactional
     public ReadingLogResponse create(Long bookId, ReadingLogRequest request) {
-        Book book = cariBuku(bookId);
+        dev.bookshelf.security.User currentUser = dev.bookshelf.common.SecurityUtil.getCurrentUser();
+        Long currentUserId = currentUser.getId();
+        
+        Book book = bookRepository.findById(bookId)
+                .filter(b -> b.getUser() != null && b.getUser().getId().equals(currentUserId))
+                .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(bookId)));
+        
         validasiAturanBisnis(request, null);
         ReadingLog log = new ReadingLog(
-                book, request.status(), request.startedAt(), request.finishedAt(), request.rating());
+                book, request.status(), request.startedAt(), request.finishedAt(), request.rating(), currentUser);
         return ReadingLogResponse.of(readingLogRepository.saveAndFlush(log));
     }
 
     @Transactional
     public ReadingLogResponse update(Long bookId, Long logId, ReadingLogRequest request) {
-        cariBuku(bookId);
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
+        
+        Book book = bookRepository.findById(bookId)
+                .filter(b -> b.getUser() != null && b.getUser().getId().equals(currentUserId))
+                .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(bookId)));
+        
         ReadingLog log = readingLogRepository.findById(logId)
                 .filter(l -> l.getBook().getId().equals(bookId))
+                .filter(l -> l.getUser() != null && l.getUser().getId().equals(currentUserId))
                 .orElseThrow(() -> new NotFoundException(
                         "Reading log id %d untuk buku %d tidak ditemukan".formatted(logId, bookId)));
+        
         validasiAturanBisnis(request, log);
         log.setStatus(request.status());
         log.setStartedAt(request.startedAt());
@@ -71,11 +93,18 @@ public class ReadingLogService {
 
     @Transactional
     public void delete(Long bookId, Long logId) {
-        cariBuku(bookId);
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
+        
+        Book book = bookRepository.findById(bookId)
+                .filter(b -> b.getUser() != null && b.getUser().getId().equals(currentUserId))
+                .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(bookId)));
+        
         ReadingLog log = readingLogRepository.findById(logId)
                 .filter(l -> l.getBook().getId().equals(bookId))
+                .filter(l -> l.getUser() != null && l.getUser().getId().equals(currentUserId))
                 .orElseThrow(() -> new NotFoundException(
                         "Reading log id %d untuk buku %d tidak ditemukan".formatted(logId, bookId)));
+        
         readingLogRepository.delete(log);
     }
 

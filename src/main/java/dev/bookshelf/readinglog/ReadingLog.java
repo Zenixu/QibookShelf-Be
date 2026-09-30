@@ -1,6 +1,7 @@
 package dev.bookshelf.readinglog;
 
 import dev.bookshelf.book.Book;
+import dev.bookshelf.security.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -18,6 +19,10 @@ public class ReadingLog {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -40,16 +45,18 @@ public class ReadingLog {
     protected ReadingLog() {
     }
 
-    public ReadingLog(Book book, ReadingStatus status, LocalDate startedAt, LocalDate finishedAt, Integer rating) {
+    public ReadingLog(Book book, ReadingStatus status, LocalDate startedAt, LocalDate finishedAt, Integer rating, User user) {
         this.book = book;
         this.status = status;
         this.startedAt = startedAt;
         this.finishedAt = finishedAt;
         this.rating = rating;
+        this.user = user;
     }
 
     public Long getId() { return id; }
     public Book getBook() { return book; }
+    public User getUser() { return user; }
     public ReadingStatus getStatus() { return status; }
     public LocalDate getStartedAt() { return startedAt; }
     public LocalDate getFinishedAt() { return finishedAt; }

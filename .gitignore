@@ -1,32 +1,47 @@
-HELP.md
+# Compiled class files
+*.class
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.jar
+*.war
+*.ear
 
-### IntelliJ IDEA ###
+# Log files
+*.log
+logs/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE files
 .idea/
-*.iws
 *.iml
-*.ipr
-out/
-
-### Env ###
-.env
-.env-*
-
-### STS / NetBeans / VS Code ###
-.apt_generated
-.classpath
-.factorypath
-.settings/
-.springBeans
-.sts4-cache
-bin/
-nbproject/private/
-nbbuild/
-dist/
-nbdist/
-.nb-gradle/
-build/
 .vscode/
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+*.exec
+coverage/
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/

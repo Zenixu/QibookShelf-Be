@@ -41,10 +41,13 @@ public class BookService {
      * Filter hanya menyaring buku yang tampil; tiap buku tetap menampilkan
      * seluruh penulis & kategorinya (lihat API-CONTRACT.md).
      * Fetch join dilakukan per-halaman untuk menghindari N+1.
+     * 
+     * MULTI-TENANCY: Hanya menampilkan buku milik user yang sedang login.
      */
     public Page<BookSummaryResponse> list(String category, Long author, String q, Integer year, Pageable pageable) {
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
         Page<Book> page = bookRepository.findAll(
-                BookSpecifications.withFilters(category, author, q, year), pageable);
+                BookSpecifications.withFilters(category, author, q, year, currentUserId), pageable);
         return page.map(this::toSummary);
     }
 
@@ -56,11 +59,13 @@ public class BookService {
 
     @Transactional
     public BookDetailResponse create(BookRequest request) {
+        dev.bookshelf.security.User currentUser = dev.bookshelf.common.SecurityUtil.getCurrentUser();
+        
         if (bookRepository.findByIsbn(request.isbn()).isPresent()) {
             throw new ConflictException("ISBN '%s' sudah terdaftar".formatted(request.isbn()));
         }
         Publisher publisher = findPublisherOrThrow(request.publisherId());
-        Book book = new Book(request.title(), request.isbn(), request.publishYear(), publisher);
+        Book book = new Book(request.title(), request.isbn(), request.publishYear(), publisher, currentUser);
         gantiPenulis(book, request.safeAuthorIds());
         gantiKategori(book, request.safeCategoryIds());
         return BookDetailResponse.of(bookRepository.saveAndFlush(book));
@@ -158,7 +163,9 @@ public class BookService {
     }
 
     private Book findBookOrThrow(Long id) {
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
         return bookRepository.findWithDetailsById(id)
+                .filter(book -> book.getUser() != null && book.getUser().getId().equals(currentUserId))
                 .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(id)));
     }
 

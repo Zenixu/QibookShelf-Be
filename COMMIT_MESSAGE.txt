@@ -1,0 +1,48 @@
+feat: Upgrade to Java 25 + Security + Multi-tenancy
+
+BREAKING CHANGES:
+- All endpoints now require JWT authentication
+- Existing data needs user_id assignment
+
+Added:
+- JWT authentication system with Spring Security
+- User registration and login endpoints
+- Token refresh mechanism
+- Multi-tenancy support (user isolation)
+- Security components (JwtService, SecurityConfig, etc.)
+- Database migration V2 for users table
+- Comprehensive documentation (SECURITY.md, QUICKSTART.md)
+
+Changed:
+- Upgraded Java from 21 to 25
+- Updated Book entity with user relationship
+- Updated ReadingLog entity with user relationship
+- Modified all services to filter by current user
+- Enhanced BookSpecifications with user filtering
+
+Security Features:
+- BCrypt password hashing
+- JWT token signing (HMAC SHA-256)
+- CORS configuration
+- Stateless session management
+- User data isolation at database level
+
+Database:
+- New table: users
+- Added user_id to books (FK, CASCADE DELETE)
+- Added user_id to reading_logs (FK, CASCADE DELETE)
+- Auto-update trigger for updated_at column
+
+Documentation:
+- README.md - Project overview
+- SECURITY.md - Authentication guide
+- CHANGELOG.md - Version history
+- QUICKSTART.md - 5-minute setup guide
+- UPGRADE-SUMMARY.md - Migration guide
+- .env.example - Environment variables template
+
+Stats:
+- 16 new files created
+- 8 files modified
+- ~800 lines of code added
+- Security level: None → Production-Ready

@@ -3,6 +3,7 @@ package dev.bookshelf.book;
 import dev.bookshelf.author.Author;
 import dev.bookshelf.category.Category;
 import dev.bookshelf.publisher.Publisher;
+import dev.bookshelf.security.User;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
@@ -24,6 +25,10 @@ public class Book {
 
     @Column(name = "publish_year")
     private Integer publishYear;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "publisher_id", nullable = false)
@@ -48,17 +53,19 @@ public class Book {
     protected Book() {
     }
 
-    public Book(String title, String isbn, Integer publishYear, Publisher publisher) {
+    public Book(String title, String isbn, Integer publishYear, Publisher publisher, User user) {
         this.title = title;
         this.isbn = isbn;
         this.publishYear = publishYear;
         this.publisher = publisher;
+        this.user = user;
     }
 
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getIsbn() { return isbn; }
     public Integer getPublishYear() { return publishYear; }
+    public User getUser() { return user; }
     public Publisher getPublisher() { return publisher; }
     public Set<Author> getAuthors() { return authors; }
     public Set<Category> getCategories() { return categories; }
@@ -66,6 +73,7 @@ public class Book {
     public void setTitle(String title) { this.title = title; }
     public void setIsbn(String isbn) { this.isbn = isbn; }
     public void setPublishYear(Integer publishYear) { this.publishYear = publishYear; }
+    public void setUser(User user) { this.user = user; }
     public void setPublisher(Publisher publisher) { this.publisher = publisher; }
 
     @Override

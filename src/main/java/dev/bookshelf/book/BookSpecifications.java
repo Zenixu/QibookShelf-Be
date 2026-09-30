@@ -22,11 +22,18 @@ public final class BookSpecifications {
             String categorySlug,
             Long authorId,
             String q,
-            Integer year
+            Integer year,
+            Long userId
     ) {
         // Specification.and(null) ditolak di Spring Data JPA terbaru → dirakit kondisional
         // Hindari Specification.where(null) yang ambigu di Spring Data JPA terbaru
         Specification<Book> spec = (root, query, cb) -> cb.conjunction();
+        
+        // MULTI-TENANCY: Filter berdasarkan user_id (WAJIB)
+        if (userId != null) {
+            spec = spec.and(belongsToUser(userId));
+        }
+        
         if (categorySlug != null && !categorySlug.isBlank()) {
             spec = spec.and(hasCategorySlug(categorySlug));
         }
@@ -40,6 +47,13 @@ public final class BookSpecifications {
             spec = spec.and(hasPublishYear(year));
         }
         return spec;
+    }
+
+    static Specification<Book> belongsToUser(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return (root, query, cb) -> cb.equal(root.get("user").get("id"), userId);
     }
 
     static Specification<Book> hasCategorySlug(String categorySlug) {

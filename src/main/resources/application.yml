@@ -1,10 +1,33 @@
 spring:
   application:
     name: bookshelf-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bookshelf
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
   flyway:
     enabled: true
     locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-min-32-chars}
+  expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds

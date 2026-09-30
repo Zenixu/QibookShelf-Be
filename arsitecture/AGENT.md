@@ -12,7 +12,8 @@ Backend REST API pencatat buku pribadi. Tujuan utama: belajar Spring Boot, JPA, 
 | `DATABASE-DESIGN.md` | Skema final, DDL, seed |
 | `API-CONTRACT.md` | Endpoint, request/response, status code |
 | `TECH-STACK.md` | Dependency |
-| `DEVELOPMENT-SETUP.md` | Cara menjalankan |
+| `DEVELOPMENT-SETUP.md` | Cara menjalankan (terminal/Maven) |
+| `INTELLIJ-SETUP.md` | Cara menjalankan & debug di IntelliJ IDEA |
 | `TASKS.md` | Urutan kerja — kerjakan berurutan, centang saat selesai |
 
 Jika kode dan dokumen bertentangan, hentikan dan tanyakan; jangan diam-diam mengubah salah satunya.

@@ -1,5 +1,44 @@
 # 📋 CHANGELOG
 
+## [2.0.1] - 2026-09-30
+
+Perbaikan agar proyek benar-benar terbangun dan teruji penuh.
+`./mvnw clean verify` → **BUILD SUCCESS, 34 test hijau**.
+
+### Fixed
+- **Kompilasi Spring Boot 4.1.1 / Spring Security 7**
+  - `SecurityConfig` — `new DaoAuthenticationProvider(userDetailsService)` (constructor tanpa argumen dan `setUserDetailsService` sudah dihapus)
+  - `ReadingLogService.listByStatus` — tidak lagi memakai `Page.filter()`, karena sekarang mengembalikan `Streamable`
+- **Test E2E & repository** — konstruktur `Book`/`ReadingLog` kini menerima `User`,
+  `BookSpecifications.withFilters` menerima `userId`, method `idOf` duplikat dihapus,
+  dan variabel `result` yang belum dideklarasikan diperbaiki
+- **Pesan 409 ISBN** disamakan dengan `API-CONTRACT.md`: `ISBN <isbn> sudah terdaftar`
+- **`DELETE /api/books/{id}`** pada test: buku terakhir dihapus dulu sebelum publisher
+
+### Added
+- **`/api/reading-logs` global** (`ReadingLogGlobalController`)
+  - `GET /api/reading-logs?status=` → `PageResponse`
+  - `GET|PATCH|DELETE /api/reading-logs/{id}`
+  - Filter status dan filter tenant dilakukan di query
+    (`findByUserId`, `findByUserIdAndStatus`) sehingga `totalElements` akurat
+- **`PATCH /api/authors|publishers|categories/{id}`** — pembaruan parsial dengan
+  DTO `*PatchRequest` (semua field opsional), PUT tetap tersedia
+- **Test autentikasi E2E** — `@Order(0)` register + login, lalu seluruh request
+  memakai `Authorization: Bearer …` (JWT dan multi-tenancy ikut teruji)
+
+### Security
+- **Tutup kebocoran multi-tenancy**: `GET /api/books/{id}` sebelumnya tidak memeriksa
+  pemilik — user lain bisa membaca detail buku orang. Kini lewat `findBookOrThrow`
+- Whitelist `/v3/api-docs/**` dan `swagger-ui*` dihapus dari `SecurityConfig`
+  karena dependency springdoc tidak ada (endpoint-nya memang 404)
+
+### Notes
+- Build butuh **JDK 25+**; di mesin ini pakai
+  `JAVA_HOME=/usr/lib/jvm/java-26-openjdk`. JDK 21 gagal (`release version 25 not supported`)
+- Test tidak membutuhkan PostgreSQL lokal (Testcontainers `postgres:18-alpine`)
+
+---
+
 ## [2.0.0] - 2026-09-30
 
 ### 🔐 Security - CRITICAL UPDATES

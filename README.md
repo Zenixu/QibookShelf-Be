@@ -25,9 +25,17 @@ Backend REST API untuk pencatat koleksi buku pribadi dan riwayat membacanya.
 
 ### Prerequisites
 
-- Java 25
-- PostgreSQL 14+
-- Maven 3.9+
+- **JDK 25+** (`pom.xml` memakai `--release 25`). Jika JDK 25 belum terpasang,
+  JDK 26 tetap bisa dipakai:
+
+  ```bash
+  export JAVA_HOME=/usr/lib/jvm/java-26-openjdk   # Linux, mesin ini
+  ./mvnw -version                                  # pastikan Java 26/25
+  ```
+
+  JDK 21 **tidak** bisa membangun proyek ini (`release version 25 not supported`).
+- PostgreSQL 14+ *(opsional untuk pengembangan — test memakai Testcontainers)*
+- Maven 3.9+ (atau lewat wrapper `./mvnw`)
 
 ### 1. Setup Database
 
@@ -117,11 +125,19 @@ src/main/resources/
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-mvn test
+# Build penuh + seluruh test (butuh Docker untuk Testcontainers)
+export JAVA_HOME=/usr/lib/jvm/java-26-openjdk
+./mvnw clean verify
+```
 
-# Run with coverage
-mvn test jacoco:report
+34 tes: 29 end-to-end (MockMvc → service → repository → PostgreSQL di Testcontainers)
+dan 4 repository. Test E2E mendaftar & login sungguhan lalu mengirim
+`Authorization: Bearer <token>` di setiap request, sehingga JWT dan
+multi-tenancy ikut teruji.
+
+```bash
+# Run all tests
+./mvnw test
 ```
 
 ## 🚢 Deployment
@@ -145,7 +161,7 @@ docker-compose up -d
 
 ![ER Diagram](docs/er-diagram.png) _(TODO)_
 
-**7 Tables:**
+**8 Tables:**
 - `users` - User accounts
 - `authors` - Penulis buku
 - `publishers` - Penerbit

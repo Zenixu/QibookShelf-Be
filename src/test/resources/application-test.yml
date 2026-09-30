@@ -1,0 +1,5 @@
+spring:
+  flyway:
+    # Profil test hanya menjalankan skema (tanpa seed dev) supaya
+    # setiap tes dimulai dari kondisi terkontrol.
+    locations: classpath:db/migration

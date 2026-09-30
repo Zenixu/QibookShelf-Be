@@ -10,7 +10,7 @@ public record CategoryRequest(
         String name,
 
         @Size(max = 80, message = "Slug maksimal 80 karakter")
-        @Pattern(regexp = "^[a-z0-9-]*$", message = "Slug hanya boleh huruf kecil, angka, dan tanda hubung")
+        @Pattern(regexp = "^[a-z0-9]+(-[a-z0-9]+)*$", message = "Slug harus cocok ^[a-z0-9]+(-[a-z0-9]+)*$")
         String slug
 ) {
 }

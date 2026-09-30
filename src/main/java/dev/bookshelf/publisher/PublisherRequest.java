@@ -8,7 +8,7 @@ public record PublisherRequest(
         @Size(max = 150, message = "Nama penerbit maksimal 150 karakter")
         String name,
 
-        @Size(max = 100, message = "Kota maksimal 100 karakter")
+        @Size(max = 80, message = "Kota maksimal 80 karakter")
         String city
 ) {
 }

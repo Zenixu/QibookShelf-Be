@@ -38,23 +38,49 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
+        String nama = request.name().trim();
+        if (categoryRepository.existsByName(nama)) {
+            throw new ConflictException("Kategori '%s' sudah terdaftar".formatted(nama));
+        }
         String slug = resolveSlug(request);
         if (categoryRepository.existsBySlug(slug)) {
             throw new ConflictException("Slug kategori '%s' sudah terdaftar".formatted(slug));
         }
-        Category category = new Category(request.name(), slug);
+        Category category = new Category(nama, slug);
         return CategoryResponse.of(categoryRepository.save(category));
     }
 
     @Transactional
     public CategoryResponse update(Long id, CategoryRequest request) {
         Category category = findCategoryOrThrow(id);
+        String nama = request.name().trim();
+        if (!category.getName().equals(nama) && categoryRepository.existsByName(nama)) {
+            throw new ConflictException("Kategori '%s' sudah terdaftar".formatted(nama));
+        }
         String slug = resolveSlug(request);
         if (!category.getSlug().equals(slug) && categoryRepository.existsBySlug(slug)) {
             throw new ConflictException("Slug kategori '%s' sudah terdaftar".formatted(slug));
         }
-        category.setName(request.name());
+        category.setName(nama);
         category.setSlug(slug);
+        return CategoryResponse.of(category);
+    }
+
+    /** PATCH /api/categories/{id} — hanya field yang dikirim yang diubah. */
+    @Transactional
+    public CategoryResponse patch(Long id, CategoryPatchRequest request) {
+        request.validate();
+        Category category = findCategoryOrThrow(id);
+        String namaBaru = request.hasName() ? request.name().trim() : category.getName();
+        if (!category.getName().equals(namaBaru) && categoryRepository.existsByName(namaBaru)) {
+            throw new ConflictException("Kategori '%s' sudah terdaftar".formatted(namaBaru));
+        }
+        String slugBaru = request.hasSlug() ? request.slug() : resolveSlug(namaBaru, category.getSlug());
+        if (!category.getSlug().equals(slugBaru) && categoryRepository.existsBySlug(slugBaru)) {
+            throw new ConflictException("Slug kategori '%s' sudah terdaftar".formatted(slugBaru));
+        }
+        category.setName(namaBaru);
+        category.setSlug(slugBaru);
         return CategoryResponse.of(category);
     }
 
@@ -77,7 +103,18 @@ public class CategoryService {
         if (StringUtils.hasText(request.slug())) {
             return request.slug().trim().toLowerCase(Locale.ROOT);
         }
-        return request.name().trim()
+        return slugify(request.name());
+    }
+
+    private String resolveSlug(String nama, String slugLama) {
+        if (slugLama != null && !slugLama.isBlank()) {
+            return slugLama;
+        }
+        return slugify(nama);
+    }
+
+    private String slugify(String nama) {
+        return nama.trim()
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-+|-+$", "");

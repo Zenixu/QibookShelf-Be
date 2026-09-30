@@ -9,6 +9,8 @@ import dev.bookshelf.publisher.PublisherRepository;
 import dev.bookshelf.readinglog.ReadingLog;
 import dev.bookshelf.readinglog.ReadingLogRepository;
 import dev.bookshelf.readinglog.ReadingStatus;
+import dev.bookshelf.security.User;
+import dev.bookshelf.security.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -51,16 +53,25 @@ class BookRepositoryTest {
     @Autowired
     private ReadingLogRepository readingLogRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private User simpanUser(String username) {
+        return userRepository.save(new User(
+                username + "@test.dev", username, "hash-" + username, "User " + username));
+    }
+
     @Test
     void simpanBukuDuaPenulisDuaKategori_bacaUlang_relasiKonsisten() {
-        // given: 2 penulis, 1 penerbit, 2 kategori
+        // given: 2 penulis, 1 penerbit, 2 kategori, 1 user
+        User user = simpanUser("uji1");
         Author penulis1 = authorRepository.save(new Author("Penulis Satu", "Indonesia"));
         Author penulis2 = authorRepository.save(new Author("Penulis Dua", "Indonesia"));
         Publisher penerbit = publisherRepository.save(new Publisher("Penerbit Contoh", "Bandung"));
         Category fiksi = categoryRepository.save(new Category("Fiksi", "fiksi"));
         Category sastra = categoryRepository.save(new Category("Sastra", "sastra"));
 
-        Book buku = new Book("Buku Uji Coba", "9780000000001", 2024, penerbit);
+        Book buku = new Book("Buku Uji Coba", "9780000000001", 2024, penerbit, user);
         buku.getAuthors().addAll(List.of(penulis1, penulis2));
         buku.getCategories().addAll(List.of(fiksi, sastra));
         bookRepository.saveAndFlush(buku);
@@ -90,22 +101,23 @@ class BookRepositoryTest {
 
     @Test
     void filterKategoriMengembalikanBukuDenganSemuaRelasinya() {
+        User user = simpanUser("uji2");
         Author penulis = authorRepository.save(new Author("Penulis Tunggal", "Indonesia"));
         Publisher penerbit = publisherRepository.save(new Publisher("Penerbit Lain", "Surabaya"));
         Category fiksi = categoryRepository.save(new Category("Fiksi", "fiksi"));
         Category sejarah = categoryRepository.save(new Category("Sejarah", "sejarah"));
 
-        Book buku1 = new Book("Novel Pertama", "9780000000002", 2020, penerbit);
+        Book buku1 = new Book("Novel Pertama", "9780000000002", 2020, penerbit, user);
         buku1.getAuthors().add(penulis);
         buku1.getCategories().add(fiksi);
-        Book buku2 = new Book("Sejarah Kuno", "9780000000003", 2021, penerbit);
+        Book buku2 = new Book("Sejarah Kuno", "9780000000003", 2021, penerbit, user);
         buku2.getAuthors().add(penulis);
         buku2.getCategories().add(sejarah);
         bookRepository.saveAll(List.of(buku1, buku2));
 
-        // when: filter kategori fiksi
+        // when: filter kategori fiksi milik user ini
         Page<Book> hasil = bookRepository.findAll(
-                BookSpecifications.withFilters("fiksi", null, null, null),
+                BookSpecifications.withFilters("fiksi", null, null, null, user.getId()),
                 PageRequest.of(0, 10)
         );
 
@@ -123,14 +135,15 @@ class BookRepositoryTest {
 
     @Test
     void bacaUlangBukuMenghasilkanDuaLog_terurutTerbaru() {
-        Author penulis = authorRepository.save(new Author("Penulis Log", "Indonesia"));
+        User user = simpanUser("uji3");
+        authorRepository.save(new Author("Penulis Log", "Indonesia"));
         Publisher penerbit = publisherRepository.save(new Publisher("Penerbit Log", "Jakarta"));
-        Book buku = bookRepository.saveAndFlush(new Book("Buku Dibaca Ulang", "9780000000004", 2019, penerbit));
+        Book buku = bookRepository.saveAndFlush(new Book("Buku Dibaca Ulang", "9780000000004", 2019, penerbit, user));
 
         readingLogRepository.saveAndFlush(new ReadingLog(buku, ReadingStatus.DONE,
-                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5), 4));
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5), 4, user));
         readingLogRepository.saveAndFlush(new ReadingLog(buku, ReadingStatus.READING,
-                LocalDate.of(2026, 9, 1), null, null));
+                LocalDate.of(2026, 9, 1), null, null, user));
 
         List<ReadingLog> log = readingLogRepository.findByBookIdOrderByStartedAtDesc(buku.getId());
         assertThat(log).hasSize(2);
@@ -144,12 +157,13 @@ class BookRepositoryTest {
 
     @Test
     void ratingHanyaBolehPadaStatusDone_dicegahDiLevelEnumDanQuery() {
-        Author penulis = authorRepository.save(new Author("Penulis Rating", "Indonesia"));
+        User user = simpanUser("uji4");
+        authorRepository.save(new Author("Penulis Rating", "Indonesia"));
         Publisher penerbit = publisherRepository.save(new Publisher("Penerbit Rating", "Bali"));
-        Book buku = bookRepository.saveAndFlush(new Book("Buku Rating", "9780000000005", 2018, penerbit));
+        Book buku = bookRepository.saveAndFlush(new Book("Buku Rating", "9780000000005", 2018, penerbit, user));
 
         ReadingLog log = readingLogRepository.saveAndFlush(new ReadingLog(
-                buku, ReadingStatus.DONE, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 3), 5));
+                buku, ReadingStatus.DONE, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 3), 5, user));
         assertThat(log.getRating()).isEqualTo(5);
         assertThat(log.getStatus()).isEqualTo(ReadingStatus.DONE);
 

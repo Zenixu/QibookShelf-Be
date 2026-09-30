@@ -20,4 +20,16 @@ public interface ReadingLogRepository extends JpaRepository<ReadingLog, Long> {
 
     @EntityGraph(attributePaths = {"book"})
     List<ReadingLog> findByBookIdOrderByStartedAtDesc(Long bookId);
+
+    @EntityGraph(attributePaths = {"book"})
+    List<ReadingLog> findByBookIdAndUserIdOrderByStartedAtDesc(Long bookId, Long userId);
+
+    @EntityGraph(attributePaths = {"book"})
+    Page<ReadingLog> findByUserId(Long userId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"book"})
+    Page<ReadingLog> findByUserIdAndStatus(Long userId, ReadingStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"book"})
+    java.util.Optional<ReadingLog> findByIdAndUserId(Long id, Long userId);
 }

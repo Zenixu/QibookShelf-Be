@@ -12,7 +12,7 @@ public record BookRequest(
         String title,
 
         @Size(max = 13, message = "ISBN maksimal 13 karakter")
-        @Pattern(regexp = "^$|^[0-9]{10,13}$", message = "ISBN harus 10-13 digit angka")
+        @Pattern(regexp = "^([0-9]{9}[0-9X]|[0-9]{13})$", message = "ISBN harus 10 digit (terakhir boleh X) atau 13 digit angka")
         String isbn,
 
         Integer publishYear,
@@ -20,6 +20,8 @@ public record BookRequest(
         @NotNull(message = "Penerbit wajib diisi")
         Long publisherId,
 
+        @NotNull(message = "Penulis wajib diisi")
+        @Size(min = 1, message = "Minimal 1 penulis")
         List<Long> authorIds,
 
         List<Long> categoryIds

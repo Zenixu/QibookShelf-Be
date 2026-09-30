@@ -76,6 +76,14 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /** 400 — validasi manual (IllegalArgumentException) pada PATCH parsial. */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "Validasi gagal", pathOf(ex));
+        pd.setProperty("errors", List.of(Map.of("field", "body", "message", ex.getMessage())));
+        return pd;
+    }
+
     /** 400 — body JSON rusak / tidak terurai. */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex) {
@@ -122,11 +130,10 @@ public class GlobalExceptionHandler {
     }
 
     private String pathOf(Throwable ex) {
-        StackTraceElement[] trace = ex.getStackTrace();
-        for (StackTraceElement el : trace) {
-            if (el.getClassName().startsWith("dev.bookshelf.")) {
-                return el.getMethodName();
-            }
+        org.springframework.web.context.request.RequestAttributes attrs =
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes servlet) {
+            return servlet.getRequest().getRequestURI();
         }
         return "unknown";
     }

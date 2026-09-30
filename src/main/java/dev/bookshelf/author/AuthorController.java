@@ -44,6 +44,14 @@ public class AuthorController {
         return authorService.update(id, request);
     }
 
+    @PatchMapping("/{id}")
+    public AuthorResponse patch(
+            @PathVariable Long id,
+            @RequestBody AuthorPatchRequest request
+    ) {
+        return authorService.patch(id, request);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

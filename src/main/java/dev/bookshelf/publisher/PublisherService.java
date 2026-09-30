@@ -31,22 +31,42 @@ public class PublisherService {
 
     @Transactional
     public PublisherResponse create(PublisherRequest request) {
-        if (publisherRepository.existsByName(request.name())) {
-            throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(request.name()));
+        String nama = request.name().trim();
+        if (publisherRepository.existsByName(nama)) {
+            throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(nama));
         }
-        Publisher publisher = new Publisher(request.name(), request.city());
+        Publisher publisher = new Publisher(nama, request.city());
         return PublisherResponse.of(publisherRepository.save(publisher));
     }
 
     @Transactional
     public PublisherResponse update(Long id, PublisherRequest request) {
         Publisher publisher = findPublisherOrThrow(id);
-        if (!publisher.getName().equals(request.name())
-                && publisherRepository.existsByName(request.name())) {
-            throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(request.name()));
+        String nama = request.name().trim();
+        if (!publisher.getName().equals(nama)
+                && publisherRepository.existsByName(nama)) {
+            throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(nama));
         }
-        publisher.setName(request.name());
+        publisher.setName(nama);
         publisher.setCity(request.city());
+        return PublisherResponse.of(publisher);
+    }
+
+    /** PATCH /api/publishers/{id} — hanya field yang dikirim yang diubah. */
+    @Transactional
+    public PublisherResponse patch(Long id, PublisherPatchRequest request) {
+        request.validate();
+        Publisher publisher = findPublisherOrThrow(id);
+        if (request.hasName()) {
+            String nama = request.name().trim();
+            if (!publisher.getName().equals(nama) && publisherRepository.existsByName(nama)) {
+                throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(nama));
+            }
+            publisher.setName(nama);
+        }
+        if (request.hasCity()) {
+            publisher.setCity(request.city());
+        }
         return PublisherResponse.of(publisher);
     }
 

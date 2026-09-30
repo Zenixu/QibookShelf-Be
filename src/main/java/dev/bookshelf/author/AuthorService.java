@@ -31,22 +31,42 @@ public class AuthorService {
 
     @Transactional
     public AuthorResponse create(AuthorRequest request) {
-        if (authorRepository.existsByName(request.name())) {
-            throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(request.name()));
+        String nama = request.name().trim();
+        if (authorRepository.existsByName(nama)) {
+            throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(nama));
         }
-        Author author = new Author(request.name(), request.nationality());
+        Author author = new Author(nama, request.nationality());
         return AuthorResponse.of(authorRepository.save(author));
     }
 
     @Transactional
     public AuthorResponse update(Long id, AuthorRequest request) {
         Author author = findAuthorOrThrow(id);
-        if (!author.getName().equals(request.name())
-                && authorRepository.existsByName(request.name())) {
-            throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(request.name()));
+        String nama = request.name().trim();
+        if (!author.getName().equals(nama)
+                && authorRepository.existsByName(nama)) {
+            throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(nama));
         }
-        author.setName(request.name());
+        author.setName(nama);
         author.setNationality(request.nationality());
+        return AuthorResponse.of(author);
+    }
+
+    /** PATCH /api/authors/{id} — hanya field yang dikirim yang diubah. */
+    @Transactional
+    public AuthorResponse patch(Long id, AuthorPatchRequest request) {
+        request.validate();
+        Author author = findAuthorOrThrow(id);
+        if (request.hasName()) {
+            String nama = request.name().trim();
+            if (!author.getName().equals(nama) && authorRepository.existsByName(nama)) {
+                throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(nama));
+            }
+            author.setName(nama);
+        }
+        if (request.hasNationality()) {
+            author.setNationality(request.nationality());
+        }
         return AuthorResponse.of(author);
     }
 

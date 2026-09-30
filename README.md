@@ -53,7 +53,7 @@ API akan berjalan di `http://localhost:8080`
 
 ## 📚 API Documentation
 
-Lihat [SECURITY.md](SECURITY.md) untuk dokumentasi lengkap authentication dan authorization.
+Lihat [SECURITY.md](docs/SECURITY.md) untuk dokumentasi lengkap authentication dan authorization.
 
 ### Quick Test
 

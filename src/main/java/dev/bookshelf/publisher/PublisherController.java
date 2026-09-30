@@ -44,6 +44,14 @@ public class PublisherController {
         return publisherService.update(id, request);
     }
 
+    @PatchMapping("/{id}")
+    public PublisherResponse patch(
+            @PathVariable Long id,
+            @Valid @RequestBody PublisherPatchRequest request
+    ) {
+        return publisherService.patch(id, request);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

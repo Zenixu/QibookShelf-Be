@@ -42,16 +42,67 @@ public class ReadingLogService {
     /**
      * GET /api/reading-logs?status= — semua log dengan filter status opsional.
      * MULTI-TENANCY: Hanya menampilkan log milik user yang sedang login.
+     * Filter status & user dilakukan di query, bukan di memori, supaya
+     * totalElements dan paginasi tetap akurat.
      */
     public Page<ReadingLogResponse> listByStatus(ReadingStatus status, Pageable pageable) {
         Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
         Page<ReadingLog> page = (status == null)
-                ? readingLogRepository.findAll(pageable)
-                : readingLogRepository.findAllByStatus(status, pageable);
-        
-        return page
-                .filter(log -> log.getUser() != null && log.getUser().getId().equals(currentUserId))
-                .map(ReadingLogResponse::of);
+                ? readingLogRepository.findByUserId(currentUserId, pageable)
+                : readingLogRepository.findByUserIdAndStatus(currentUserId, status, pageable);
+        return page.map(ReadingLogResponse::of);
+    }
+
+    /**
+     * GET /api/reading-logs/{id} — detail satu log.
+     */
+    public ReadingLogResponse getById(Long logId) {
+        return ReadingLogResponse.of(findLogMilikUser(logId));
+    }
+
+    /**
+     * PATCH /api/reading-logs/{id} — ubah sebagian isi log.
+     * Field yang tidak dikirim dipertahankan, lalu aturan bisnis divalidasi
+     * terhadap keadaan akhir log (lihat API-CONTRACT.md).
+     */
+    @Transactional
+    public ReadingLogResponse patch(Long logId, ReadingLogRequest request) {
+        ReadingLog log = findLogMilikUser(logId);
+
+        ReadingStatus status = request.status();
+        LocalDate startedAt = request.startedAt() != null ? request.startedAt() : log.getStartedAt();
+        LocalDate finishedAt = request.finishedAt() != null ? request.finishedAt() : log.getFinishedAt();
+        Integer rating = request.rating() != null ? request.rating() : log.getRating();
+
+        // finishedAt dan rating hanya bermakna pada status DONE
+        if (status != ReadingStatus.DONE) {
+            finishedAt = null;
+            rating = null;
+        }
+
+        ReadingLogRequest akhir = new ReadingLogRequest(status, startedAt, finishedAt, rating);
+        validasiAturanBisnis(akhir, log);
+
+        log.setStatus(status);
+        log.setStartedAt(startedAt);
+        log.setFinishedAt(finishedAt);
+        log.setRating(rating);
+        return ReadingLogResponse.of(log);
+    }
+
+    /**
+     * DELETE /api/reading-logs/{id} — hapus log.
+     */
+    @Transactional
+    public void deleteById(Long logId) {
+        readingLogRepository.delete(findLogMilikUser(logId));
+    }
+
+    private ReadingLog findLogMilikUser(Long logId) {
+        Long currentUserId = dev.bookshelf.common.SecurityUtil.getCurrentUserId();
+        return readingLogRepository.findById(logId)
+                .filter(l -> l.getUser() != null && l.getUser().getId().equals(currentUserId))
+                .orElseThrow(() -> new NotFoundException("Reading log id %d tidak ditemukan".formatted(logId)));
     }
 
     @Transactional

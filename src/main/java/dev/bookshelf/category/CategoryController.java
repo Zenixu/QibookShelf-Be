@@ -44,6 +44,14 @@ public class CategoryController {
         return categoryService.update(id, request);
     }
 
+    @PatchMapping("/{id}")
+    public CategoryResponse patch(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryPatchRequest request
+    ) {
+        return categoryService.patch(id, request);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

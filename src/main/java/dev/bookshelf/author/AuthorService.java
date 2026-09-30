@@ -50,6 +50,24 @@ public class AuthorService {
         return AuthorResponse.of(author);
     }
 
+    /**
+     * PATCH /api/authors/{id} — hanya field yang dikirim yang berubah.
+     */
+    @Transactional
+    public AuthorResponse patch(Long id, AuthorPatchRequest request) {
+        Author author = findAuthorOrThrow(id);
+        if (request.hasName() && !author.getName().equals(request.name())) {
+            if (authorRepository.existsByName(request.name())) {
+                throw new ConflictException("Penulis '%s' sudah terdaftar".formatted(request.name()));
+            }
+            author.setName(request.name());
+        }
+        if (request.hasNationality()) {
+            author.setNationality(request.nationality());
+        }
+        return AuthorResponse.of(author);
+    }
+
     @Transactional
     public void delete(Long id) {
         Author author = findAuthorOrThrow(id);

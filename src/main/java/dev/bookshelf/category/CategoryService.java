@@ -58,6 +58,27 @@ public class CategoryService {
         return CategoryResponse.of(category);
     }
 
+    /**
+     * PATCH /api/categories/{id} — hanya field yang dikirim yang berubah.
+     * Slug lama dipertahankan kecuali dikirim ulang; slug baru dinormalisasi
+     * (huruf kecil) dan dicek duplikatnya.
+     */
+    @Transactional
+    public CategoryResponse patch(Long id, CategoryPatchRequest request) {
+        Category category = findCategoryOrThrow(id);
+        if (request.hasName()) {
+            category.setName(request.name());
+        }
+        if (request.hasSlug()) {
+            String slug = request.slug().trim().toLowerCase(Locale.ROOT);
+            if (!category.getSlug().equals(slug) && categoryRepository.existsBySlug(slug)) {
+                throw new ConflictException("Slug kategori '%s' sudah terdaftar".formatted(slug));
+            }
+            category.setSlug(slug);
+        }
+        return CategoryResponse.of(category);
+    }
+
     @Transactional
     public void delete(Long id) {
         Category category = findCategoryOrThrow(id);

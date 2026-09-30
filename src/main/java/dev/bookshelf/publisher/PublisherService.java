@@ -50,6 +50,24 @@ public class PublisherService {
         return PublisherResponse.of(publisher);
     }
 
+    /**
+     * PATCH /api/publishers/{id} — hanya field yang dikirim yang berubah.
+     */
+    @Transactional
+    public PublisherResponse patch(Long id, PublisherPatchRequest request) {
+        Publisher publisher = findPublisherOrThrow(id);
+        if (request.hasName() && !publisher.getName().equals(request.name())) {
+            if (publisherRepository.existsByName(request.name())) {
+                throw new ConflictException("Penerbit '%s' sudah terdaftar".formatted(request.name()));
+            }
+            publisher.setName(request.name());
+        }
+        if (request.hasCity()) {
+            publisher.setCity(request.city());
+        }
+        return PublisherResponse.of(publisher);
+    }
+
     @Transactional
     public void delete(Long id) {
         Publisher publisher = findPublisherOrThrow(id);

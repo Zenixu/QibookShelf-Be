@@ -52,9 +52,7 @@ public class BookService {
     }
 
     public BookDetailResponse getDetailById(Long id) {
-        Book book = bookRepository.findWithDetailsById(id)
-                .orElseThrow(() -> new NotFoundException("Buku id %d tidak ditemukan".formatted(id)));
-        return BookDetailResponse.of(book);
+        return BookDetailResponse.of(findBookOrThrow(id));
     }
 
     @Transactional
@@ -62,7 +60,7 @@ public class BookService {
         dev.bookshelf.security.User currentUser = dev.bookshelf.common.SecurityUtil.getCurrentUser();
         
         if (bookRepository.findByIsbn(request.isbn()).isPresent()) {
-            throw new ConflictException("ISBN '%s' sudah terdaftar".formatted(request.isbn()));
+            throw new ConflictException("ISBN %s sudah terdaftar".formatted(request.isbn()));
         }
         Publisher publisher = findPublisherOrThrow(request.publisherId());
         Book book = new Book(request.title(), request.isbn(), request.publishYear(), publisher, currentUser);
@@ -77,7 +75,7 @@ public class BookService {
         bookRepository.findByIsbn(request.isbn())
                 .filter(other -> !other.getId().equals(id))
                 .ifPresent(other -> {
-                    throw new ConflictException("ISBN '%s' sudah terdaftar".formatted(request.isbn()));
+                    throw new ConflictException("ISBN %s sudah terdaftar".formatted(request.isbn()));
                 });
         book.setTitle(request.title());
         book.setIsbn(request.isbn());
@@ -104,7 +102,7 @@ public class BookService {
             bookRepository.findByIsbn(request.isbn())
                     .filter(other -> !other.getId().equals(id))
                     .ifPresent(other -> {
-                        throw new ConflictException("ISBN '%s' sudah terdaftar".formatted(request.isbn()));
+                        throw new ConflictException("ISBN %s sudah terdaftar".formatted(request.isbn()));
                     });
             book.setIsbn(request.isbn());
         }

@@ -18,6 +18,14 @@ public interface ReadingLogRepository extends JpaRepository<ReadingLog, Long> {
             """)
     Page<ReadingLog> findAllByStatus(@Param("status") ReadingStatus status, Pageable pageable);
 
+    /** Semua log milik satu user (multi-tenancy), terbaru di halaman pertama. */
+    @EntityGraph(attributePaths = {"book"})
+    Page<ReadingLog> findByUserId(Long userId, Pageable pageable);
+
+    /** Log milik satu user dengan filter status, tanpa filter di memori. */
+    @EntityGraph(attributePaths = {"book"})
+    Page<ReadingLog> findByUserIdAndStatus(Long userId, ReadingStatus status, Pageable pageable);
+
     @EntityGraph(attributePaths = {"book"})
     List<ReadingLog> findByBookIdOrderByStartedAtDesc(Long bookId);
 }

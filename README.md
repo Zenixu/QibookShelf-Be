@@ -39,25 +39,69 @@ Backend REST API untuk pencatat koleksi buku pribadi dan riwayat membacanya.
 
 ### 1. Setup Database
 
+Pastikan PostgreSQL berjalan, lalu buat database:
+
 ```bash
+# Linux (systemd)
+sudo systemctl start postgresql
+
 createdb bookshelf
 ```
+
+> **Catatan:** app memakai Flyway dan akan membuat/mengisi seluruh skema
+> otomatis saat pertama kali dijalankan. Database `bookshelf` cukup ada
+> dalam keadaan kosong.
 
 ### 2. Environment Variables
 
 ```bash
-export DB_USER=postgres
-export DB_PASSWORD=your_password
-export JWT_SECRET=your-256-bit-secret-key-change-this-in-production-min-32-chars
+cp .env.example .env
+# lalu sunting .env (DB_USER, DB_PASSWORD, JWT_SECRET)
+# JWT_SECRET minimal 32 karakter; buat cepat dengan:
+openssl rand -base64 48
 ```
+
+Variabel yang dibaca app: `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`
+(`DB_URL` & `SERVER_PORT` opsional).
 
 ### 3. Run Application
 
+> **Catatan mesin ini:** Maven tidak ada di PATH dan proyek butuh JDK 25.
+> Gunakan wrapper `./mvnw` dan JDK 26 yang terpasang:
+
 ```bash
-mvn spring-boot:run
+export JAVA_HOME=/usr/lib/jvm/java-26-openjdk
+
+# jalankan dengan profil dev (termasuk data seed)
+set -a; . ./.env; set +a
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 API akan berjalan di `http://localhost:8080`
+
+Cek cepat:
+
+```bash
+curl http://localhost:8080/actuator/health   # -> {"status":"UP"}
+```
+
+### Kredensial seed (profil dev)
+
+Data dummy profil `dev` (lihat `src/main/resources/db/seed/V100__seed_dev.sql`)
+sudah termasuk 2 user siap pakai:
+
+| Username | Password     |
+|----------|--------------|
+| `demo`   | `demo12345`  |
+| `sinta`  | `sinta12345` |
+
+Login untuk mendapat token:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo12345"}'
+```
 
 ## 📚 Documentation
 

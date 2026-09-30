@@ -51,9 +51,14 @@ mvn spring-boot:run
 
 API akan berjalan di `http://localhost:8080`
 
-## 📚 API Documentation
+## 📚 Documentation
 
-Lihat [SECURITY.md](docs/SECURITY.md) untuk dokumentasi lengkap authentication dan authorization.
+Dokumentasi lengkap tersedia di folder `docs/`:
+- **[docs/README.md](docs/README.md)** - Documentation index
+- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - 5-minute setup guide
+- **[docs/SECURITY.md](docs/SECURITY.md)** - Authentication & authorization
+- **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Version history
+- **[docs/UPGRADE-SUMMARY.md](docs/UPGRADE-SUMMARY.md)** - Technical details
 
 ### Quick Test
 

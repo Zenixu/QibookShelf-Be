@@ -115,6 +115,10 @@ Jika menyukai satu sumber konfigurasi:
 
 File `.env` sudah ada di `.gitignore`, jadi rahasia tidak ikut ter-commit.
 
+> **⚠️ Penting — `.env` TIDAK dibaca otomatis.** Spring Boot hanya membaca **environment variable** (dan `application.yml`), **bukan** file `.env`. Karena itu, di IntelliJ kamu **wajib** memakai salah satu cara di atas (isi env var manual di Run Configuration, **atau** pasang plugin EnvFile). Tanpa keduanya, aplikasi memakai nilai *fallback* di `application.yml` (`postgres`/`postgres`) dan **`JWT_SECRET` placeholder** — yang bisa membuat login gagal atau JWT tidak aman.
+>
+> Di terminal, ini dilakukan lewat `set -a; . ./.env; set +a` (lihat `DEVELOPMENT-SETUP.md`) — file `.env` di-*source* ke environment **dulu**, baru Spring bisa membacanya. IntelliJ tidak melakukan `source` otomatis, jadi itulah fungsi plugin EnvFile / kolom Environment variables.
+
 ---
 
 ## 6. Jalankan PostgreSQL

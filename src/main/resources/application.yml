@@ -31,3 +31,10 @@ jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-min-32-chars}
   expiration: 86400000  # 24 hours in milliseconds
   refresh-expiration: 604800000  # 7 days in milliseconds
+
+# Logging
+logging:
+  level:
+    # WARN "UserDetailsService beans will not be used" bersifat informatif:
+    # proyek memakai AuthenticationProvider kustom untuk JWT, jadi perilaku ini disengaja.
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
